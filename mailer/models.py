@@ -137,11 +137,3 @@ class Message(models.Model):
             return email.to
         else:
             return []
-
-    @property
-    def subject(self):
-        email = self.email
-        if email is not None:
-            return email.subject
-        else:
-            return ""
