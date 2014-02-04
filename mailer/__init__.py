@@ -1,6 +1,3 @@
-from django.utils.encoding import force_text
-from django.core.mail import EmailMessage, EmailMultiAlternatives
-
 from mailer.models import Message, PRIORITY_HIGH, PRIORITY_LOW, PRIORITY_MEDIUM
 
 VERSION = (0, 1,)
@@ -27,6 +24,9 @@ def send_mail(subject, message, from_email, recipient_list, priority="medium", f
     """
     Function to queue e-mails
     """
+
+    from django.utils.encoding import force_text
+    from django.core.mail import EmailMessage
     
     priority = PRIORITY_MAPPING[priority]
     subject = force_text(subject)
@@ -57,6 +57,9 @@ def send_html_mail(subject, message, message_html, from_email, recipient_list, p
     """
     Function to queue HTML e-mails
     """
+
+    from django.utils.encoding import force_text
+    from django.core.mail import EmailMultiAlternatives
 
     priority = PRIORITY_MAPPING[priority]
     # need to do this in case subject used lazy version of ugettext
