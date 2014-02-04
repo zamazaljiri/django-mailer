@@ -1,5 +1,3 @@
-from mailer.models import Message, PRIORITY_HIGH, PRIORITY_LOW, PRIORITY_MEDIUM
-
 VERSION = (0, 1,)
 
 
@@ -7,13 +5,6 @@ def get_version():
     return '.'.join(map(str, VERSION))
 
 __version__ = get_version()
-
-
-PRIORITY_MAPPING = {
-    "high": PRIORITY_HIGH,
-    "medium": PRIORITY_MEDIUM,
-    "low": PRIORITY_LOW,
-}
 
 
 # replacement for django.core.mail.send_mail
@@ -27,6 +18,7 @@ def send_mail(subject, message, from_email, recipient_list, priority="medium", f
 
     from django.utils.encoding import force_text
     from django.core.mail import EmailMessage
+    from mailer.models import Message, PRIORITY_MAPPING
     
     priority = PRIORITY_MAPPING[priority]
     subject = force_text(subject)
@@ -60,6 +52,7 @@ def send_html_mail(subject, message, message_html, from_email, recipient_list, p
 
     from django.utils.encoding import force_text
     from django.core.mail import EmailMultiAlternatives
+    from mailer.models import Message, PRIORITY_MAPPING
 
     priority = PRIORITY_MAPPING[priority]
     # need to do this in case subject used lazy version of ugettext
@@ -83,4 +76,5 @@ def send_html_mail(subject, message, message_html, from_email, recipient_list, p
     db_msg.email = email_obj
     db_msg.set_recipients(recipient_list)
     db_msg.save()
+
     return 1
