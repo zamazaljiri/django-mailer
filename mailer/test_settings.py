@@ -10,3 +10,5 @@ INSTALLED_APPS = [
     ]
 
 SECRET_KEY = 'x'
+
+INSTALLED_APPS = ('south', 'mailer')

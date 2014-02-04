@@ -29,6 +29,7 @@ setup(
     install_requires = [
         'Django >= 1.6',
         'six >= 1.5.2',
+        'South >= 0.8.4',
         ],
 
 )
