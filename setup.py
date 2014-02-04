@@ -1,14 +1,15 @@
 from distutils.core import setup
 
+from mailer import get_version
+
 
 setup(
     name="django-mailer",
-    version=__import__("mailer").__version__,
-    description="A reusable Django app for queuing the sending of email",
-    long_description=open("docs/usage.txt").read(),
-    author="James Tauber",
-    author_email="jtauber@jtauber.com",
-    url="http://code.google.com/p/django-mailer/",
+    version=get_version(),
+    description="A reusable Django app for queuing the sending of email. Forked from pinax/django-mailer.",
+    author="Jiri Zamazal",
+    author_email="zamazal.jiri@gmail.com",
+    url="http://github.com/zamazaljiri/django-mailer",
     packages=[
         "mailer",
         "mailer.management",
@@ -23,12 +24,11 @@ setup(
         "Operating System :: OS Independent",
         "Programming Language :: Python",
         "Programming Language :: Python :: 2.7",
-        "Programming Language :: Python :: 3.3",
         "Framework :: Django",
     ],
     install_requires = [
-        'Django >= 1.4',
-        'six >= 1.4.1',
+        'Django >= 1.6',
+        'six >= 1.5.2',
         ],
 
 )

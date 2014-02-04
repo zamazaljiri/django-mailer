@@ -14,50 +14,45 @@ from django.db import models
 from django.utils.translation import ugettext_lazy as _
 
 
-PRIORITIES = (
-    ("1", "high"),
-    ("2", "medium"),
-    ("3", "low"),
-    ("4", "deferred"),
+PRIORITY_HIGH = 1
+PRIORITY_MEDIUM = 2
+PRIORITY_LOW = 3
+
+PRIORITY_CHOICES = (
+    (PRIORITY_HIGH, _('High')),
+    (PRIORITY_MEDIUM, _('Medium')),
+    (PRIORITY_LOW, _('Low')),
+)
+
+STATUS_PENDING = 0
+STATUS_SENT = 1
+STATUS_DEFERRED = 2
+
+STATUS_CHOICES = (
+    (STATUS_PENDING, _("Pending")),
+    (STATUS_SENT, _("Sent")),
+    (STATUS_DEFERRED, _("Deferred")),
 )
 
 
 class MessageManager(models.Manager):
     
-    def high_priority(self):
+    def pending(self):
         """
-        the high priority messages in the queue
+        the messages in the queue for sending
         """
-        return self.filter(priority="1")
-    
-    def medium_priority(self):
-        """
-        the medium priority messages in the queue
-        """
-        return self.filter(priority="2")
-    
-    def low_priority(self):
-        """
-        the low priority messages in the queue
-        """
-        return self.filter(priority="3")
-    
-    def non_deferred(self):
-        """
-        the messages in the queue not deferred
-        """
-        return self.filter(priority__lt="4")
+        return self.filter(status=STATUS_PENDING).order_by('priority')
     
     def deferred(self):
         """
         the deferred messages in the queue
         """
-        return self.filter(priority="4")
+        return self.filter(status=STATUS_DEFERRED)
     
-    def retry_deferred(self, new_priority=2):
+    def retry_deferred(self):
         count = 0
         for message in self.deferred():
-            if message.retry(new_priority):
+            if message.retry():
                 count += 1
         return count
 
@@ -86,28 +81,37 @@ class Message(models.Model):
     
     # The actual data - a pickled EmailMessage
     message_data = models.TextField()
-    when_added = models.DateTimeField(default=datetime_now)
-    priority = models.CharField(max_length=1, choices=PRIORITIES, default="2")
-    # @@@ campaign?
-    # @@@ content_type?
-    
+    priority = models.PositiveSmallIntegerField(null=False, blank=False, choices=PRIORITY_CHOICES,
+                                                default=PRIORITY_MEDIUM, verbose_name=_('Priority'))
+    status = models.PositiveIntegerField(null=False, blank=False, choices=STATUS_CHOICES, default=STATUS_PENDING,
+                                         verbose_name=_('Status'))
+    created = models.DateTimeField(blank=False, null=False, default=datetime_now, verbose_name=_('Created'))
+    updated = models.DateTimeField(blank=False, null=False, default=datetime_now, verbose_name=_('Updated'))
+    # Recipients and subject are cached attrs (for list view)
+    recipients = models.TextField(blank=True, null=True, verbose_name=_('Recipients'))
+    subject = models.TextField(blank=True, null=True, verbose_name=_('Subject'))
+
     objects = MessageManager()
     
     class Meta:
-        verbose_name = _("message")
-        verbose_name_plural = _("messages")
+        verbose_name = _('message')
+        verbose_name_plural = _('messages')
     
     def defer(self):
-        self.priority = "4"
+        self.status = STATUS_DEFERRED
         self.save()
     
-    def retry(self, new_priority=2):
-        if self.priority == "4":
-            self.priority = new_priority
+    def retry(self):
+        if self.status == STATUS_DEFERRED:
+            self.status = STATUS_PENDING
             self.save()
             return True
         else:
             return False
+
+    def set_sent(self):
+        self.status = STATUS_SENT
+        self.save()
     
     def _get_email(self):
         return db_to_email(self.message_data)
@@ -115,9 +119,10 @@ class Message(models.Model):
     def _set_email(self, val):
         self.message_data = email_to_db(val)
     
-    email = property(_get_email, _set_email, doc=
-                     """EmailMessage object. If this is mutated, you will need to
-set the attribute again to cause the underlying serialised data to be updated.""")
+    email = property(_get_email, _set_email)
+
+    def set_recipients(self, recipients_list):
+        self.recipients = ', '.join(recipients_list)
     
     @property
     def to_addresses(self):
@@ -126,140 +131,7 @@ set the attribute again to cause the underlying serialised data to be updated.""
             return email.to
         else:
             return []
-    
-    @property
-    def subject(self):
-        email = self.email
-        if email is not None:
-            return email.subject
-        else:
-            return ""
 
-
-def filter_recipient_list(lst):
-    if lst is None:
-        return None
-    retval = []
-    for e in lst:
-        if DontSendEntry.objects.has_address(e):
-            logging.info("skipping email to %s as on don't send list " % e.encode("utf-8"))
-        else:
-            retval.append(e)
-    return retval
-
-
-def make_message(subject="", body="", from_email=None, to=None, bcc=None,
-                 attachments=None, headers=None, priority=None):
-    """
-    Creates a simple message for the email parameters supplied.
-    The 'to' and 'bcc' lists are filtered using DontSendEntry.
-    
-    If needed, the 'email' attribute can be set to any instance of EmailMessage
-    if e-mails with attachments etc. need to be supported.
-    
-    Call 'save()' on the result when it is ready to be sent, and not before.
-    """
-    to = filter_recipient_list(to)
-    bcc = filter_recipient_list(bcc)
-    core_msg = EmailMessage(
-        subject=subject,
-        body=body,
-        from_email=from_email,
-        to=to,
-        bcc=bcc,
-        attachments=attachments,
-        headers=headers
-    )
-    db_msg = Message(priority=priority)
-    db_msg.email = core_msg
-    return db_msg
-
-
-class DontSendEntryManager(models.Manager):
-    
-    def has_address(self, address):
-        """
-        is the given address on the don't send list?
-        """
-        queryset = self.filter(to_address__iexact=address)
-        try:
-            # Django 1.2
-            return queryset.exists()
-        except AttributeError:
-            # AttributeError: 'QuerySet' object has no attribute 'exists'
-            return bool(queryset.count())
-
-
-class DontSendEntry(models.Model):
-    
-    to_address = models.EmailField()
-    when_added = models.DateTimeField()
-    # @@@ who added?
-    # @@@ comment field?
-    
-    objects = DontSendEntryManager()
-    
-    class Meta:
-        verbose_name = _("don't send entry")
-        verbose_name_plural = _("don't send entries")
-
-
-RESULT_CODES = (
-    ("1", "success"),
-    ("2", "don't send"),
-    ("3", "failure"),
-    # @@@ other types of failure?
-)
-
-
-class MessageLogManager(models.Manager):
-    
-    def log(self, message, result_code, log_message=""):
-        """
-        create a log entry for an attempt to send the given message and
-        record the given result and (optionally) a log message
-        """
-        return self.create(
-            message_data = message.message_data,
-            when_added = message.when_added,
-            priority = message.priority,
-            # @@@ other fields from Message
-            result = result_code,
-            log_message = log_message,
-        )
-
-
-class MessageLog(models.Model):
-    
-    # fields from Message
-    message_data = models.TextField()
-    when_added = models.DateTimeField(db_index=True)
-    priority = models.CharField(max_length=1, choices=PRIORITIES, db_index=True)
-    # @@@ campaign?
-    
-    # additional logging fields
-    when_attempted = models.DateTimeField(default=datetime_now)
-    result = models.CharField(max_length=1, choices=RESULT_CODES)
-    log_message = models.TextField()
-    
-    objects = MessageLogManager()
-    
-    class Meta:
-        verbose_name = _("message log")
-        verbose_name_plural = _("message logs")
-    
-    @property
-    def email(self):
-        return db_to_email(self.message_data)
-    
-    @property
-    def to_addresses(self):
-        email = self.email
-        if email is not None:
-            return email.to
-        else:
-            return []
-    
     @property
     def subject(self):
         email = self.email

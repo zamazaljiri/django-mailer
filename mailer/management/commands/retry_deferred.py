@@ -21,6 +21,6 @@ class Command(NoArgsCommand):
             logging.basicConfig(level=logging.DEBUG, format="%(message)s")
         else:
             logging.basicConfig(level=logging.ERROR, format="%(message)s")
-        count = Message.objects.retry_deferred() # @@@ new_priority not yet supported
+        count = Message.objects.retry_deferred()
         logging.info("%s message(s) retried" % count)
         connection.close()
