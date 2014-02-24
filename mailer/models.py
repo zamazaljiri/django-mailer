@@ -12,6 +12,7 @@ except ImportError:
 from django.core.mail import EmailMessage
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
+from django.utils.text import mark_safe
 
 
 PRIORITY_HIGH = 1
@@ -92,7 +93,7 @@ class Message(models.Model):
     status = models.PositiveIntegerField(null=False, blank=False, choices=STATUS_CHOICES, default=STATUS_PENDING,
                                          verbose_name=_('Status'))
     created = models.DateTimeField(blank=False, null=False, default=datetime_now, verbose_name=_('Created'))
-    updated = models.DateTimeField(blank=False, null=False, default=datetime_now, verbose_name=_('Updated'))
+    updated = models.DateTimeField(blank=False, null=False, auto_now=True, verbose_name=_('Updated'))
     # Recipients and subject are cached attrs (for list view)
     recipients = models.TextField(blank=True, null=True, verbose_name=_('Recipients'))
     subject = models.TextField(blank=True, null=True, verbose_name=_('Subject'))
@@ -137,3 +138,19 @@ class Message(models.Model):
             return email.to
         else:
             return []
+
+    def get_email_content_for_admin_field(self):
+        contents = []
+
+        if self.email.body:
+            contents.append('<textarea cols="150" rows="20">%s</textarea>' % self.email.body)
+
+        for alternative in self.email.alternatives:
+            if alternative[1] == 'text/html':
+                contents.append('<textarea cols="150" rows="20">%s</textarea>' % alternative[0])
+            else:
+                contents.append('<code>Alternative in mime type: %s</code>' % alternative[1])
+
+        return mark_safe('<hr />'.join(contents))
+
+    get_email_content_for_admin_field.short_description = _('Email content')
