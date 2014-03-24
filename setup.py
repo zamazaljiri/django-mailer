@@ -1,4 +1,4 @@
-from distutils.core import setup
+from setuptools import setup, find_packages
 
 from mailer import get_version
 
@@ -10,11 +10,8 @@ setup(
     author="Jiri Zamazal",
     author_email="zamazal.jiri@gmail.com",
     url="http://github.com/zamazaljiri/django-mailer",
-    packages=[
-        "mailer",
-        "mailer.management",
-        "mailer.management.commands",
-    ],
+    packages=find_packages(),
+    include_package_data=True,
     package_dir={"mailer": "mailer"},
     classifiers=[
         "Development Status :: 4 - Beta",
