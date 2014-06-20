@@ -1,16 +1,17 @@
 from __future__ import unicode_literals
 
-from django.conf import settings
 from django.template import Context, Template
 
 from mailer import send_html_mail
 
+import config
+
 
 class EmailTemplateSender:
-    default_language_code = settings.EMAIL_DEFAULT_LANGUAGE_CODE
+    default_language_code = config.EMAIL_DEFAULT_LANGUAGE_CODE
     default_context_data = {}
-    default_from_email = settings.EMAIL_DEFAULT_FROM_EMAIL
-    default_priority = settings.EMAIL_DEFAULT_PRIORITY
+    default_from_email = config.EMAIL_DEFAULT_FROM_EMAIL
+    default_priority = config.EMAIL_DEFAULT_PRIORITY
     default_auth_user = None
     default_auth_password = None
     default_headers = {}
@@ -60,9 +61,8 @@ class EmailTemplateSender:
 
     @classmethod
     def get_email_template_object(cls, template_name=None, template_obj=None):
-        from .models import EmailTemplate
-
-        if isinstance(template_obj, EmailTemplate):
+        model = config.get_email_template_model()
+        if isinstance(template_obj, model):
             return template_obj
         else:
-            return EmailTemplate.objects.get(slug=template_name)
+            return model.objects.get(slug=template_name)
