@@ -16,13 +16,14 @@ class EmailTemplateSender:
     default_auth_password = None
     default_headers = {}
     default_fail_silently = False
+    default_message = ' '
 
     @classmethod
     def send_html_mail_from_email_template(cls, template_name, recipient_list, attachments=None,
                                            cached_template_obj=None, **kwargs):
 
         for attr_name in ('language_code', 'context_data', 'from_email', 'priority', 'fail_silently', 'auth_user',
-                          'auth_password', 'headers'):
+                          'auth_password', 'headers', 'message'):
             kwargs[attr_name] = kwargs.get(attr_name, getattr(cls, 'default_%s' % attr_name))
 
         context = Context(kwargs['context_data'])
@@ -33,7 +34,6 @@ class EmailTemplateSender:
         html_message = cls.after_render(html_message)
 
         kwargs['subject'] = getattr(email_template, 'subject_%s' % kwargs['language_code'])
-        kwargs['message'] = '' # empty message, because it is used only html message,
         kwargs['message_html'] = html_message
         kwargs['recipient_list'] = recipient_list
         kwargs['attachments'] = attachments
