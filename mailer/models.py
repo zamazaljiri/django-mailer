@@ -142,7 +142,7 @@ class Message(models.Model):
     def get_email_content_for_admin_field(self):
         contents = []
 
-        if self.email.body:
+        if self.email.body and self.email.body.strip():
             contents.append('<textarea cols="150" rows="20">%s</textarea>' % self.email.body)
 
         for alternative in self.email.alternatives:
