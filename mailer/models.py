@@ -9,10 +9,11 @@ except ImportError:
     from datetime import datetime
     datetime_now = datetime.now
 
-from django.core.mail import EmailMessage
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
 from django.utils.text import mark_safe
+from django.contrib.contenttypes.fields import GenericForeignKey
+from django.contrib.contenttypes.models import ContentType
 
 
 PRIORITY_HIGH = 1
@@ -98,7 +99,15 @@ class Message(models.Model):
     recipients = models.TextField(blank=True, null=True, verbose_name=_('Recipients'))
     subject = models.TextField(blank=True, null=True, verbose_name=_('Subject'))
 
+    tag = models.SlugField(null=True, blank=True)
+    content_type = models.ForeignKey(ContentType, null=True, blank=True)
+    object_id = models.PositiveIntegerField(null=True, blank=True)
+    content_object = GenericForeignKey('content_type', 'object_id')
+
     objects = MessageManager()
+
+    def __str__(self):
+        return str(self.pk)
     
     class Meta:
         verbose_name = _('message')

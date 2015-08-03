@@ -9,6 +9,9 @@ class AbstractEmailTemplate(models.Model):
     subject = models.CharField(max_length=100, null=False, blank=False, verbose_name=_('Subject'))
     html_body = models.TextField(null=False, blank=False, verbose_name=_('HTML body'))
 
+    def __str__(self):
+        return self.slug
+
     class Meta:
         abstract = True
         verbose_name = _('E-mail')

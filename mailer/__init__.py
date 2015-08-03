@@ -1,4 +1,4 @@
-VERSION = (2, 0, 0)
+VERSION = (2, 0, 1)
 
 
 def get_version():
@@ -11,7 +11,7 @@ __version__ = get_version()
 
 
 def send_mail(subject, message, from_email, recipient_list, priority='medium', fail_silently=False, auth_user=None,
-              auth_password=None, headers=None, attachments=None):
+              auth_password=None, headers=None, attachments=None, content_object=None, tag=None):
     """
     Function to queue e-mails
     """
@@ -35,18 +35,18 @@ def send_mail(subject, message, from_email, recipient_list, priority='medium', f
     )
     db_msg = Message(
         priority=priority,
-        subject=subject
+        subject=subject,
+        content_object=content_object,
+        tag=tag
     )
     db_msg.email = email_obj
     db_msg.set_recipients(recipient_list)
     db_msg.save()
     return db_msg
 
-    return 1
-
 
 def send_html_mail(subject, message, message_html, from_email, recipient_list, priority='medium', fail_silently=False,
-                   auth_user=None, auth_password=None, headers=None, attachments=None):
+                   auth_user=None, auth_password=None, headers=None, attachments=None, content_object=None, tag=None):
     """
     Function to queue HTML e-mails
     """
@@ -73,10 +73,12 @@ def send_html_mail(subject, message, message_html, from_email, recipient_list, p
     email_obj.attach_alternative(message_html, 'text/html')
     db_msg = Message(
         priority=priority,
-        subject=subject
+        subject=subject,
+        content_object=content_object,
+        tag=tag
     )
     db_msg.email = email_obj
     db_msg.set_recipients(recipient_list)
     db_msg.save()
 
-    return 1
+    return db_msg

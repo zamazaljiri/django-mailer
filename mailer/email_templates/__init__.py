@@ -7,7 +7,7 @@ from mailer.email_templates.models import EmailTemplate
 from mailer.email_templates import config
 
 
-class EmailTemplateSender:
+class EmailTemplateSender(object):
     default_context_data = {}
     default_from_email = config.EMAIL_DEFAULT_FROM_EMAIL
     default_priority = config.EMAIL_DEFAULT_PRIORITY
@@ -16,13 +16,15 @@ class EmailTemplateSender:
     default_headers = {}
     default_fail_silently = False
     default_message = ' '
+    default_content_object = None
+    default_tag = None
 
     @classmethod
     def send_html_mail_from_email_template(cls, template_name, recipient_list, attachments=None,
                                            cached_template_obj=None, **kwargs):
 
         for attr_name in ('context_data', 'from_email', 'priority', 'fail_silently', 'auth_user',
-                          'auth_password', 'headers', 'message'):
+                          'auth_password', 'headers', 'message', 'content_object', 'tag'):
             kwargs[attr_name] = kwargs.get(attr_name, getattr(cls, 'default_%s' % attr_name))
 
         context = Context(kwargs['context_data'])
@@ -39,8 +41,7 @@ class EmailTemplateSender:
 
         del kwargs['context_data']
 
-        send_html_mail(**kwargs)
-        return True
+        return send_html_mail(**kwargs)
 
     @classmethod
     def before_render(cls, email_template):
