@@ -1,44 +1,45 @@
 # -*- coding: utf-8 -*-
-from south.utils import datetime_utils as datetime
-from south.db import db
-from south.v2 import SchemaMigration
-from django.db import models
+from __future__ import unicode_literals
+
+from django.db import models, migrations
+import django.utils.timezone
 
 
-class Migration(SchemaMigration):
+class Migration(migrations.Migration):
 
-    def forwards(self, orm):
-        # Adding model 'Message'
-        db.create_table(u'mailer_message', (
-            (u'id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
-            ('message_data', self.gf('django.db.models.fields.TextField')()),
-            ('priority', self.gf('django.db.models.fields.PositiveSmallIntegerField')(default=2)),
-            ('status', self.gf('django.db.models.fields.PositiveIntegerField')(default=0)),
-            ('created', self.gf('django.db.models.fields.DateTimeField')(default=datetime.datetime.now)),
-            ('updated', self.gf('django.db.models.fields.DateTimeField')(default=datetime.datetime.now)),
-            ('recipients', self.gf('django.db.models.fields.TextField')(null=True, blank=True)),
-            ('subject', self.gf('django.db.models.fields.TextField')(null=True, blank=True)),
-        ))
-        db.send_create_signal(u'mailer', ['Message'])
+    dependencies = [
+    ]
 
-
-    def backwards(self, orm):
-        # Deleting model 'Message'
-        db.delete_table(u'mailer_message')
-
-
-    models = {
-        u'mailer.message': {
-            'Meta': {'object_name': 'Message'},
-            'created': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime.now'}),
-            u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'message_data': ('django.db.models.fields.TextField', [], {}),
-            'priority': ('django.db.models.fields.PositiveSmallIntegerField', [], {'default': '2'}),
-            'recipients': ('django.db.models.fields.TextField', [], {'null': 'True', 'blank': 'True'}),
-            'status': ('django.db.models.fields.PositiveIntegerField', [], {'default': '0'}),
-            'subject': ('django.db.models.fields.TextField', [], {'null': 'True', 'blank': 'True'}),
-            'updated': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime.now'})
-        }
-    }
-
-    complete_apps = ['mailer']
+    operations = [
+        migrations.CreateModel(
+            name='EmailTemplate',
+            fields=[
+                ('id', models.AutoField(verbose_name='ID', primary_key=True, serialize=False, auto_created=True)),
+                ('slug', models.SlugField(verbose_name='Slug', max_length=100, unique=True)),
+                ('subject', models.CharField(verbose_name='Subject', max_length=100)),
+                ('html_body', models.TextField(verbose_name='HTML body')),
+            ],
+            options={
+                'verbose_name': 'E-mail',
+                'verbose_name_plural': 'E-mails',
+                'abstract': False,
+            },
+        ),
+        migrations.CreateModel(
+            name='Message',
+            fields=[
+                ('id', models.AutoField(verbose_name='ID', primary_key=True, serialize=False, auto_created=True)),
+                ('message_data', models.TextField()),
+                ('priority', models.PositiveSmallIntegerField(verbose_name='Priority', default=2, choices=[(1, 'High'), (2, 'Medium'), (3, 'Low')])),
+                ('status', models.PositiveIntegerField(verbose_name='Status', default=0, choices=[(0, 'Pending'), (1, 'Sent'), (2, 'Deferred')])),
+                ('created', models.DateTimeField(verbose_name='Created', default=django.utils.timezone.now)),
+                ('updated', models.DateTimeField(verbose_name='Updated', auto_now=True)),
+                ('recipients', models.TextField(verbose_name='Recipients', blank=True, null=True)),
+                ('subject', models.TextField(verbose_name='Subject', blank=True, null=True)),
+            ],
+            options={
+                'verbose_name': 'message',
+                'verbose_name_plural': 'messages',
+            },
+        ),
+    ]

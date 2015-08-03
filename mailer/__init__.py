@@ -1,4 +1,4 @@
-VERSION = (1, 0, 2)
+VERSION = (2, 0, 0)
 
 
 def get_version():
@@ -10,8 +10,8 @@ __version__ = get_version()
 # replacement for django.core.mail.send_mail
 
 
-def send_mail(subject, message, from_email, recipient_list, priority="medium", fail_silently=False, auth_user=None,
-              auth_password=None, headers={}, attachments=None):
+def send_mail(subject, message, from_email, recipient_list, priority='medium', fail_silently=False, auth_user=None,
+              auth_password=None, headers=None, attachments=None):
     """
     Function to queue e-mails
     """
@@ -19,7 +19,8 @@ def send_mail(subject, message, from_email, recipient_list, priority="medium", f
     from django.utils.encoding import force_text
     from django.core.mail import EmailMessage
     from mailer.models import Message, PRIORITY_MAPPING
-    
+
+    headers = headers or {}
     priority = PRIORITY_MAPPING[priority]
     subject = force_text(subject)
     message = force_text(message)
@@ -44,8 +45,8 @@ def send_mail(subject, message, from_email, recipient_list, priority="medium", f
     return 1
 
 
-def send_html_mail(subject, message, message_html, from_email, recipient_list, priority="medium", fail_silently=False,
-                   auth_user=None, auth_password=None, headers={}, attachments=None):
+def send_html_mail(subject, message, message_html, from_email, recipient_list, priority='medium', fail_silently=False,
+                   auth_user=None, auth_password=None, headers=None, attachments=None):
     """
     Function to queue HTML e-mails
     """
@@ -54,6 +55,7 @@ def send_html_mail(subject, message, message_html, from_email, recipient_list, p
     from django.core.mail import EmailMultiAlternatives
     from mailer.models import Message, PRIORITY_MAPPING
 
+    headers = headers or {}
     priority = PRIORITY_MAPPING[priority]
     # need to do this in case subject used lazy version of ugettext
     subject = force_text(subject)
@@ -68,7 +70,7 @@ def send_html_mail(subject, message, message_html, from_email, recipient_list, p
         attachments=attachments,
         headers=headers
     )
-    email_obj.attach_alternative(message_html, "text/html")
+    email_obj.attach_alternative(message_html, 'text/html')
     db_msg = Message(
         priority=priority,
         subject=subject

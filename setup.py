@@ -20,13 +20,11 @@ setup(
         "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
         "Programming Language :: Python",
-        "Programming Language :: Python :: 2.7",
+        "Programming Language :: Python :: 3.4",
         "Framework :: Django",
     ],
     install_requires = [
-        'Django >= 1.6',
-        'six >= 1.5.2',
-        'South >= 0.8.4',
-        'django-easymode >= 1.4b2',
+        'Django >= 1.8',
+        'six >= 1.9',
         ],
 )
