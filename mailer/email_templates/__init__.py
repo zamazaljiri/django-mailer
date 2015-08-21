@@ -57,8 +57,8 @@ class EmailTemplateSender(object):
     def after_sent(self, **kwargs):
         pass
 
-    def get_rendered_email_template(self, language_code, template_name=None, template_obj=None, context_data={}):
-        context = Context(context_data)
+    def get_rendered_email_template(self, language_code, template_name=None, template_obj=None, context_data=None):
+        context = Context(context_data or {})
         email_template = self.get_email_template_object(template_name, template_obj)
         html_template = getattr(email_template, 'html_body_%s' % language_code)
         return self.after_render(Template(html_template).render(context).encode('utf-8'))
