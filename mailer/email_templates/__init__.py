@@ -1,6 +1,7 @@
 from __future__ import unicode_literals
 
 from django.template import Context, Template
+from django.db.models.loading import get_model
 
 from mailer import send_html_mail
 from mailer.email_templates.models import EmailTemplate
@@ -60,7 +61,7 @@ class EmailTemplateSender(object):
 
     @classmethod
     def get_email_template_class(cls):
-        return EmailTemplate
+        return get_model(*config.MAILER_TEMPLATE_MODEL) if config.MAILER_TEMPLATE_MODEL else EmailTemplate
 
     @classmethod
     def get_email_template_object(cls, template_name=None, template_obj=None):
