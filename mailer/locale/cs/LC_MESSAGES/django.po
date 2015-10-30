@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2014-03-24 07:48-0500\n"
+"POT-Creation-Date: 2015-10-30 14:31+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -18,62 +18,82 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=3; plural=(n==1) ? 0 : (n>=2 && n<=4) ? 1 : 2;\n"
 
-#: models.py:23
-msgid "High"
-msgstr "Vysoká"
+#: email_templates/models.py:8
+msgid "Slug"
+msgstr "Slug"
 
-#: models.py:24
-msgid "Medium"
-msgstr "Střední"
-
-#: models.py:25
-msgid "Low"
-msgstr "Nízká"
-
-#: models.py:39
-msgid "Pending"
-msgstr "Čekající"
-
-#: models.py:40
-msgid "Sent"
-msgstr "Odesláno"
-
-#: models.py:41
-msgid "Deferred"
-msgstr "Odloženo"
-
-#: models.py:92
-msgid "Priority"
-msgstr "Priorita"
-
-#: models.py:94
-msgid "Status"
-msgstr "Stav"
-
-#: models.py:95
-msgid "Created"
-msgstr "Vytvořeno"
-
-#: models.py:96
-msgid "Updated"
-msgstr "Aktualizováno"
-
-#: models.py:98
-msgid "Recipients"
-msgstr "Příjemci"
-
-#: models.py:99
+#: email_templates/models.py:9 models.py:101
 msgid "Subject"
 msgstr "Předmět"
 
-#: models.py:104
+#: email_templates/models.py:10
+msgid "HTML body"
+msgstr "HTML obsah"
+
+#: email_templates/models.py:17
+msgid "E-mail"
+msgstr "E-mail"
+
+#: email_templates/models.py:18
+msgid "E-mails"
+msgstr "E-maily"
+
+#: models.py:24
+msgid "High"
+msgstr "Vysoká"
+
+#: models.py:25
+msgid "Medium"
+msgstr "Střední"
+
+#: models.py:26
+msgid "Low"
+msgstr "Nízká"
+
+#: models.py:40
+msgid "Pending"
+msgstr "Čekající"
+
+#: models.py:41
+msgid "Sent"
+msgstr "Odesláno"
+
+#: models.py:42
+msgid "Deferred"
+msgstr "Odloženo"
+
+#: models.py:93
+msgid "Priority"
+msgstr "Priorita"
+
+#: models.py:95
+msgid "Status"
+msgstr "Stav"
+
+#: models.py:96
+msgid "Created"
+msgstr "Vytvořeno"
+
+#: models.py:97
+msgid "Updated"
+msgstr "Aktualizováno"
+
+#: models.py:99
+msgid "Recipients"
+msgstr "Příjemci"
+
+#: models.py:100
+msgid "Reply to"
+msgstr "Odpovědět na"
+
+#: models.py:114
 msgid "message"
 msgstr "zpráva"
 
-#: models.py:105
+#: models.py:115
 msgid "messages"
 msgstr "zprávy"
 
-#: models.py:156
+#: models.py:170
 msgid "Email content"
 msgstr "Obsah emailu"
