@@ -1,5 +1,6 @@
+from __future__ import unicode_literals
+
 import base64
-import logging
 import pickle
 
 try:
@@ -14,6 +15,7 @@ from django.utils.translation import ugettext_lazy as _
 from django.utils.text import mark_safe
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
+from django.utils.encoding import python_2_unicode_compatible
 
 
 PRIORITY_HIGH = 1
@@ -44,19 +46,19 @@ STATUS_CHOICES = (
 
 
 class MessageManager(models.Manager):
-    
+
     def pending(self):
         """
         the messages in the queue for sending
         """
         return self.filter(status=STATUS_PENDING).order_by('priority')
-    
+
     def deferred(self):
         """
         the deferred messages in the queue
         """
         return self.filter(status=STATUS_DEFERRED)
-    
+
     def retry_deferred(self):
         count = 0
         for message in self.deferred():
@@ -85,8 +87,9 @@ def db_to_email(data):
                 return None
 
 
+@python_2_unicode_compatible
 class Message(models.Model):
-    
+
     # The actual data - a pickled EmailMessage
     message_data = models.TextField()
     priority = models.PositiveSmallIntegerField(null=False, blank=False, choices=PRIORITY_CHOICES,
@@ -97,6 +100,7 @@ class Message(models.Model):
     updated = models.DateTimeField(blank=False, null=False, auto_now=True, verbose_name=_('Updated'))
     # Recipients and subject are cached attrs (for list view)
     recipients = models.TextField(blank=True, null=True, verbose_name=_('Recipients'))
+    reply_to = models.TextField(blank=True, null=True, verbose_name=_('Reply to'))
     subject = models.TextField(blank=True, null=True, verbose_name=_('Subject'))
 
     tag = models.SlugField(null=True, blank=True)
@@ -106,17 +110,10 @@ class Message(models.Model):
 
     objects = MessageManager()
 
-    def __str__(self):
-        return str(self.pk)
-    
-    class Meta:
-        verbose_name = _('message')
-        verbose_name_plural = _('messages')
-    
     def defer(self):
         self.status = STATUS_DEFERRED
         self.save()
-    
+
     def retry(self):
         if self.status == STATUS_DEFERRED:
             self.status = STATUS_PENDING
@@ -128,18 +125,22 @@ class Message(models.Model):
     def set_sent(self):
         self.status = STATUS_SENT
         self.save()
-    
+
     def _get_email(self):
         return db_to_email(self.message_data)
-    
+
     def _set_email(self, val):
         self.message_data = email_to_db(val)
-    
+
     email = property(_get_email, _set_email)
 
     def set_recipients(self, recipients_list):
         self.recipients = ', '.join(recipients_list)
-    
+
+    def set_reply_to(self, reply_to_list):
+        if reply_to_list:
+            self.reply_to = ', '.join(reply_to_list)
+
     @property
     def to_addresses(self):
         email = self.email
@@ -163,3 +164,10 @@ class Message(models.Model):
         return mark_safe('<hr />'.join(contents))
 
     get_email_content_for_admin_field.short_description = _('Email content')
+
+    def __str__(self):
+        return str(self.pk)
+
+    class Meta:
+        verbose_name = _('message')
+        verbose_name_plural = _('messages')

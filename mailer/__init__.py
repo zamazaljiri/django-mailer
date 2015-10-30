@@ -11,7 +11,7 @@ __version__ = get_version()
 
 
 def send_mail(subject, message, from_email, recipient_list, priority='medium', fail_silently=False, auth_user=None,
-              auth_password=None, headers=None, attachments=None, content_object=None, tag=None):
+              auth_password=None, headers=None, attachments=None, content_object=None, tag=None, reply_to_list=None):
     """
     Function to queue e-mails
     """
@@ -31,7 +31,8 @@ def send_mail(subject, message, from_email, recipient_list, priority='medium', f
         from_email=from_email,
         to=recipient_list,
         attachments=attachments,
-        headers=headers
+        headers=headers,
+        reply_to=reply_to_list
     )
     db_msg = Message(
         priority=priority,
@@ -41,12 +42,14 @@ def send_mail(subject, message, from_email, recipient_list, priority='medium', f
     )
     db_msg.email = email_obj
     db_msg.set_recipients(recipient_list)
+    db_msg.set_reply_to(reply_to_list)
     db_msg.save()
     return db_msg
 
 
 def send_html_mail(subject, message, message_html, from_email, recipient_list, priority='medium', fail_silently=False,
-                   auth_user=None, auth_password=None, headers=None, attachments=None, content_object=None, tag=None):
+                   auth_user=None, auth_password=None, headers=None, attachments=None, content_object=None, tag=None,
+                   reply_to_list=None):
     """
     Function to queue HTML e-mails
     """
@@ -68,7 +71,8 @@ def send_html_mail(subject, message, message_html, from_email, recipient_list, p
         from_email=from_email,
         to=recipient_list,
         attachments=attachments,
-        headers=headers
+        headers=headers,
+        reply_to=reply_to_list
     )
     email_obj.attach_alternative(message_html, 'text/html')
     db_msg = Message(
@@ -79,6 +83,7 @@ def send_html_mail(subject, message, message_html, from_email, recipient_list, p
     )
     db_msg.email = email_obj
     db_msg.set_recipients(recipient_list)
+    db_msg.set_reply_to(reply_to_list)
     db_msg.save()
 
     return db_msg
