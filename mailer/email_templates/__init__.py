@@ -28,8 +28,8 @@ class EmailTemplateSender(object):
                           'auth_password', 'headers', 'message', 'content_object', 'tag'):
             kwargs[attr_name] = kwargs.get(attr_name, getattr(cls, 'default_%s' % attr_name))
 
-        context = Context(kwargs['context_data'])
         email_template = cls.get_email_template_object(template_name, cached_template_obj)
+        context = cls.get_context(kwargs['context_data'], email_template)
 
         html_template = cls.before_render(email_template)
         html_message = Template(html_template).render(context).encode('utf-8')
@@ -43,6 +43,10 @@ class EmailTemplateSender(object):
         del kwargs['context_data']
 
         return send_html_mail(**kwargs)
+
+    @classmethod
+    def get_context(cls, context_data, email_template):
+        return Context(context_data)
 
     @classmethod
     def before_render(cls, email_template, content_object=None):
