@@ -35,7 +35,7 @@ class EmailTemplateSender(object):
         html_message = Template(html_template).render(context).encode('utf-8')
         html_message = cls.after_render(html_message)
 
-        kwargs['subject'] = cls.get_subject(email_template, kwargs.get('content_object'))
+        kwargs['subject'] = cls.get_subject(email_template, context, kwargs.get('content_object'))
         kwargs['message_html'] = html_message
         kwargs['recipient_list'] = recipient_list
         kwargs['attachments'] = attachments
@@ -57,7 +57,7 @@ class EmailTemplateSender(object):
         return html
 
     @classmethod
-    def get_subject(cls, email_template, content_object=None):
+    def get_subject(cls, email_template, context, content_object=None):
         return email_template.subject
 
     @classmethod
