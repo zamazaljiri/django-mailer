@@ -24,6 +24,8 @@ EMAIL_LOCK_FILE = getattr(settings, "MAILER_LOCK_FILE", "mailer_send_mail")
 #maximum mails count wich could be send per one 'send_all' execution
 MAXIMUM_MAILS_PER_COMMAND = getattr(settings, "MAILER_MAXIMUM_EMAILS_PER_COMMAND", -1)
 
+ALTERNATIVE_EMAIL_HOST_CONFIG = getattr(settings, 'ALTERNATIVE_EMAIL_HOST_CONFIG', {})
+
 
 def prioritize(max_mails):
     """
@@ -33,6 +35,24 @@ def prioritize(max_mails):
     if max_mails > 0:
         return qs[:max_mails]
     return qs
+
+
+def init_connections():
+    EMAIL_BACKEND = getattr(settings, "MAILER_EMAIL_BACKEND", "django.core.mail.backends.smtp.EmailBackend")
+    connections = {
+        'default': get_connection(backend=EMAIL_BACKEND)
+    }
+    for key, config in ALTERNATIVE_EMAIL_HOST_CONFIG.items():
+        connections[key] = get_connection(
+            backend=EMAIL_BACKEND,
+            host=config['HOST'],
+            port=config.get('PORT', None),
+            username=config.get('USERNAME', ''),
+            password=config.get('PASSWORD', ''),
+            use_tls=config.get('USE_TLS', False),
+            use_ssl=config.get('USE_SSL', False)
+        )
+    return connections
 
 def send_all():
     """
@@ -59,16 +79,28 @@ def send_all():
 
     deferred = 0
     sent = 0
+
+    connections = init_connections()
+    connections_recipient_domain_mapper = {}
+    for key, config in ALTERNATIVE_EMAIL_HOST_CONFIG.items():
+        for domain in config.get('DOMAINS', []):
+            connections_recipient_domain_mapper[domain] = key
     
     try:
-        connection = None
         for message in prioritize(MAXIMUM_MAILS_PER_COMMAND):
             try:
-                if connection is None:
-                    connection = get_connection(backend=EMAIL_BACKEND)
                 logging.info("sending message [%s] '%s' to %s" % (message.id, message.subject, message.recipients))
                 email = message.email
-                email.connection = connection
+
+                connection_key = 'default'
+                if len(email.recipients()) == 1 and connections_recipient_domain_mapper:
+                    recipient = email.recipients()[0].strip().lower()
+                    for domain, key in connections_recipient_domain_mapper.items():
+                        if recipient.endswith(domain):
+                            connection_key = key
+                            break
+
+                email.connection = connections.get(connection_key, connections['default'])
                 email.send()
                 message.set_sent()
                 sent += 1
@@ -78,7 +110,7 @@ def send_all():
                 logging.info("message deferred due to failure: %s" % err)
                 deferred += 1
                 # Get new connection, it case the connection itself has an error.
-                connection = None
+                connections = init_connections()
     finally:
         logging.debug("releasing lock...")
         lock.release()
